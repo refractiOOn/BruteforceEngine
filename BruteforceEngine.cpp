@@ -62,7 +62,6 @@ void BruteforceEngine::Start()
 		if (!log.is_open())
 		{
 			std::cout << "Could not open file" << std::endl;
-			return;
 		}
 	}
 	for (size_t i = m_maxPasswordLength; i > 0; --i)
@@ -89,8 +88,8 @@ void BruteforceEngine::Start()
 	tracker.join();
 	if (!m_password.empty())
 	{
-		std::cout << "Password: " << m_password << std::endl;
 		Decrypt();
+		std::cout << "Password: " << m_password << std::endl;
 	}
 	else
 	{
@@ -109,10 +108,10 @@ std::vector<std::string> BruteforceEngine::GetBunchOfPasswords(size_t amount)
 	std::vector<std::string> bunch;
 	for (size_t i = 0; i < amount; ++i)
 	{
-		if (!m_lastIndexIsReached && !m_passwordIsFound)
+		if (!m_lastIndexIsReached)
 		{
-			std::string pass;
 			std::lock_guard lg(m_mutex);
+			std::string pass;
 			for (size_t j = 0; j < m_currentPasswordLength; ++j)
 			{
 				pass += m_symbols[m_index[j]];
@@ -168,7 +167,7 @@ void BruteforceEngine::Tracker()
 {
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 	double elapsedSeconds = 0;
-	while (!m_lastIndexIsReached && !m_passwordIsFound)
+	while (!m_passwordIsFound)
 	{
 		std::cout << m_checkedPasswordsAmount << " from " << m_possiblePasswordsAmount << " passwords checked [" << static_cast<double>(m_checkedPasswordsAmount) / static_cast<double>(m_possiblePasswordsAmount) * 100 << "%]" << std::endl;
 		std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
@@ -191,48 +190,39 @@ void BruteforceEngine::FindPassword()
 			return;
 		}
 	}
-	while (!m_lastIndexIsReached && !m_passwordIsFound)
+	while (!m_passwordIsFound)
 	{
 		std::vector<std::string> passwords = GetBunchOfPasswords(100000);
-		if (!passwords.empty())
+		if (passwords.empty())
 		{
-			for (uint32_t i = 0; i < passwords.size(); ++i)
+			break;
+		}
+
+		for (uint32_t i = 0; i < passwords.size() && !m_passwordIsFound; ++i)
+		{
+			m_mutex.lock();
+			++m_checkedPasswordsAmount;
+			if (m_passwordLogIsUsed)
 			{
-				if (!m_lastIndexIsReached && !m_passwordIsFound)
+				log.write(&passwords[i][0], passwords[i].length());
+				log << '\n';
+			}
+			m_mutex.unlock();
+			std::vector<unsigned char> key(EVP_MAX_KEY_LENGTH);
+			std::vector<unsigned char> iv(EVP_MAX_IV_LENGTH);
+			std::vector<unsigned char> plainText;
+			SetPassword(passwords[i], key, iv);
+			if (DecryptAes(m_encryptedText, plainText, key, iv))
+			{
+				std::vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
+				CalculateHash(plainText, hash);
+				if (m_correctHash == hash)
 				{
-					m_mutex.lock();
-					++m_checkedPasswordsAmount;
-					if (m_passwordLogIsUsed)
-					{
-						log.write(&passwords[i][0], passwords[i].length());
-						log << '\n';
-					}
-					m_mutex.unlock();
-					std::vector<unsigned char> key(EVP_MAX_KEY_LENGTH);
-					std::vector<unsigned char> iv(EVP_MAX_IV_LENGTH);
-					std::vector<unsigned char> plainText;
-					SetPassword(passwords[i], key, iv);
-					if (DecryptAes(m_encryptedText, plainText, key, iv))
-					{
-						std::vector<unsigned char> hash(SHA256_DIGEST_LENGTH);
-						CalculateHash(plainText, hash);
-						if (m_correctHash == hash)
-						{
-							m_password = passwords[i];
-							m_passwordIsFound = true;
-							break;
-						}
-					}
-				}
-				else
-				{
+					m_password = passwords[i];
+					m_passwordIsFound = true;
 					break;
 				}
 			}
-		}
-		else
-		{
-			break;
 		}
 	}
 }

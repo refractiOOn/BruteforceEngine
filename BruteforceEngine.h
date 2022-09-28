@@ -20,8 +20,8 @@ private:
 	size_t m_currentPasswordLength = 0;
 	int64_t m_checkedPasswordsAmount = 0;
 	int64_t m_possiblePasswordsAmount = 0;
-	bool m_passwordIsFound = 0;
-	bool m_lastIndexIsReached = 0;
+	bool m_passwordIsFound = false;
+	bool m_lastIndexIsReached = false;
 
 	std::vector<std::string> m_symbols;
 	std::vector<size_t> m_index;
