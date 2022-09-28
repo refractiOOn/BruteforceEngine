@@ -1,0 +1,2 @@
+length: 4;
+symbols: abcdefghijklmnopqrstuvwxyz0123456789;
