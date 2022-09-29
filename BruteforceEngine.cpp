@@ -76,6 +76,8 @@ void BruteforceEngine::Start()
 	m_correctHash.resize(SHA256_DIGEST_LENGTH);
 
 	std::thread tracker(&BruteforceEngine::Tracker, this);
+	tracker.detach();
+
 	std::vector<std::thread> threads;
 	for (size_t i = 0; i < threadsAmount; ++i)
 	{
@@ -85,7 +87,7 @@ void BruteforceEngine::Start()
 	{
 		threads[i].join();
 	}
-	tracker.join();
+
 	if (!m_password.empty())
 	{
 		Decrypt();
