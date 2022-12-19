@@ -171,7 +171,7 @@ void BruteforceEngine::Tracker()
 	double elapsedSeconds = 0;
 	while (!m_passwordIsFound)
 	{
-		std::cout << m_checkedPasswordsAmount << " from " << m_possiblePasswordsAmount << " passwords checked [" << static_cast<double>(m_checkedPasswordsAmount) / static_cast<double>(m_possiblePasswordsAmount) * 100 << "%]" << std::endl;
+		std::cout << m_checkedPasswordsAmount << " from " << m_possiblePasswordsAmount << " passwords checked [" << m_checkedPasswordsAmount * 100 / m_possiblePasswordsAmount << "%]" << std::endl;
 		std::chrono::system_clock::time_point current = std::chrono::system_clock::now();
 		std::chrono::duration<double> elapsed = current - start;
 		elapsedSeconds = elapsed.count();
