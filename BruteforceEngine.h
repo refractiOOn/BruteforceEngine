@@ -1,29 +1,30 @@
 #pragma once
 
 #include "cryptography.h"
-#include <iostream>
-#include <string>
+#include "BruteforceSettings.hpp"
+#include <filesystem>
+#include <vector>
 #include <mutex>
 #include <map>
-#include <thread>
-#include <chrono>
+#include <memory>
 
 class BruteforceEngine
 {
 public:
-	BruteforceEngine(fs::path encrypted, fs::path plain);
-	void SetConfig(fs::path path);
-	void EnablePasswordLog(fs::path path);
+	BruteforceEngine(std::filesystem::path encrypted, std::filesystem::path plain);
+
+	void AddConfig(BruteforceSettings *config);
+	void EnablePasswordLog(std::filesystem::path path);
 	void Start();
 private:
-	size_t m_maxPasswordLength = 0;
-	size_t m_currentPasswordLength = 0;
+	BruteforceSettings *m_config = nullptr;
+
+	int m_currentPasswordLength = 0;
 	int64_t m_checkedPasswordsAmount = 0;
 	int64_t m_possiblePasswordsAmount = 0;
 	bool m_passwordIsFound = false;
 	bool m_lastIndexIsReached = false;
 
-	std::vector<std::string> m_symbols;
 	std::vector<size_t> m_index;
 
 	std::vector<unsigned char> m_encryptedText;
@@ -32,13 +33,11 @@ private:
 	std::string m_password;
 	std::mutex m_mutex;
 private:
-	fs::path m_encryptedFile;
-	fs::path m_plainFile;
-	fs::path m_logFile;
-	bool m_configIsUsed = false;
+	std::filesystem::path m_encryptedFile;
+	std::filesystem::path m_plainFile;
+	std::filesystem::path m_logFile;
 	bool m_passwordLogIsUsed = false;
 private:
-	void SetDefaultConfig();
 	std::vector<std::string> GetBunchOfPasswords(size_t amount);
 	bool IndexIncrement();
 	void Tracker();

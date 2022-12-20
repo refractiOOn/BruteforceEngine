@@ -1,4 +1,9 @@
+#include "BruteforceSettings.hpp"
 #include "BruteforceEngine.h"
+#include <iostream>
+#include <memory>
+#include <filesystem>
+#include <string>
 
 int main(size_t argc, char* argv[])
 {
@@ -10,7 +15,6 @@ int main(size_t argc, char* argv[])
 	fs::path encryptedFile;
 	fs::path plainFile;
 	bool passwordLogIsUsed = false;
-	bool configIsUsed = false;
 	if (commandLineArgs.size() < 2)
 	{
 		std::cout << "Invalid command-line args" << std::endl;
@@ -30,24 +34,13 @@ int main(size_t argc, char* argv[])
 			return 0;
 		}
 	}
-	if (commandLineArgs.size() > 3)
-	{
-		if (commandLineArgs[3].compare("--use_config") == 0)
-		{
-			configIsUsed = true;
-		}
-		else
-		{
-			std::cout << "Invalid command-line args" << std::endl;
-			return 0;
-		}
-	}
+
+	std::filesystem::path configFile = "config.txt";
+	BruteforceSettings settings(configFile);
+	settings.Load();
 
 	BruteforceEngine engine(encryptedFile, plainFile);
-	if (configIsUsed)
-	{
-		engine.SetConfig("config.txt");
-	}
+	engine.AddConfig(&settings);
 	if (passwordLogIsUsed)
 	{
 		engine.EnablePasswordLog("passwords_log.txt");

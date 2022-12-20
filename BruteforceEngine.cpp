@@ -1,50 +1,27 @@
 #include "BruteforceEngine.h"
+#include <iostream>
+#include <vector>
+#include <map>
+#include <filesystem>
+#include <fstream>
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <ranges>
 
-size_t GetPCCoresAmount()
-{
-	char* buf;
-	size_t size;
-	if (_dupenv_s(&buf, &size, "NUMBER_OF_PROCESSORS") == 0 && buf != nullptr)
-	{
-		return atoi(buf);
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-BruteforceEngine::BruteforceEngine(fs::path encrypted, fs::path plain) :
+BruteforceEngine::BruteforceEngine(std::filesystem::path encrypted, std::filesystem::path plain) :
 	m_encryptedFile(encrypted),
 	m_plainFile(plain)
 {
+
 }
 
-void BruteforceEngine::SetConfig(fs::path path)
+void BruteforceEngine::AddConfig(BruteforceSettings *config)
 {
-	m_configIsUsed = true;
-	std::map<std::string, std::string> config;
-	std::fstream file(path);
-	std::string temp;
-	while (std::getline(file, temp, ';'))
-	{
-		temp.erase(std::remove(temp.begin(), temp.end(), ' '), temp.end());
-		temp.erase(std::remove(temp.begin(), temp.end(), '\n'), temp.end());
-		std::string key(temp.begin(), std::find(temp.begin(), temp.end(), ':'));
-		std::string value(++std::find(temp.begin(), temp.end(), ':'), temp.end());
-		config.emplace(key, value);
-	}
-	auto it = config.find("symbols");
-	for (size_t i = 0; i < it->second.length(); ++i)
-	{
-		std::string temp;
-		temp += it->second[i];
-		m_symbols.push_back(temp);
-	}
-	m_maxPasswordLength = std::stoi(config.find("length")->second);
+	m_config = config;
 }
 
-void BruteforceEngine::EnablePasswordLog(fs::path path)
+void BruteforceEngine::EnablePasswordLog(std::filesystem::path path)
 {
 	m_passwordLogIsUsed = true;
 	m_logFile = path;
@@ -52,9 +29,9 @@ void BruteforceEngine::EnablePasswordLog(fs::path path)
 
 void BruteforceEngine::Start()
 {
-	if (!m_configIsUsed)
+	if (!m_config)
 	{
-		SetDefaultConfig();
+		throw std::runtime_error("Config was not included");
 	}
 	if (m_passwordLogIsUsed)
 	{
@@ -64,29 +41,24 @@ void BruteforceEngine::Start()
 			std::cout << "Could not open file" << std::endl;
 		}
 	}
-	for (size_t i = m_maxPasswordLength; i > 0; --i)
+
+	for (size_t i = m_config->GetMaxPasswordLength(); i > 0; --i)
 	{
-		m_possiblePasswordsAmount += pow(m_symbols.size(), i);
+		m_possiblePasswordsAmount += pow(m_config->GetAdmissibleSymbols().size(), i);
 	}
-	const size_t threadsAmount = GetPCCoresAmount() * 2;
 	OpenSSL_add_all_algorithms();
 
 	ReadFile(m_encryptedFile, m_encryptedText);
 	CutHash(m_encryptedText, m_correctHash);
 	m_correctHash.resize(SHA256_DIGEST_LENGTH);
 
-	std::thread tracker(&BruteforceEngine::Tracker, this);
+	std::jthread tracker(&BruteforceEngine::Tracker, this);
 	tracker.detach();
 
-	std::vector<std::thread> threads;
-	for (size_t i = 0; i < threadsAmount; ++i)
-	{
-		threads.push_back(std::thread(&BruteforceEngine::FindPassword, this));
-	}
-	for (size_t i = 0; i < threads.size(); ++i)
-	{
-		threads[i].join();
-	}
+	std::vector<std::jthread> threads(m_config->GetAmountOfCPUCores());
+	std::ranges::for_each(threads, [&](auto &el) {el = std::move(std::jthread(&BruteforceEngine::FindPassword, this)); });
+
+	std::ranges::for_each(threads, [&](auto &el) {el.join(); });
 
 	if (!m_password.empty())
 	{
@@ -97,12 +69,6 @@ void BruteforceEngine::Start()
 	{
 		std::cout << "Password not found" << std::endl;
 	}
-}
-
-void BruteforceEngine::SetDefaultConfig()
-{
-	m_maxPasswordLength = 1;
-	m_symbols = { "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" };
 }
 
 std::vector<std::string> BruteforceEngine::GetBunchOfPasswords(size_t amount)
@@ -116,7 +82,7 @@ std::vector<std::string> BruteforceEngine::GetBunchOfPasswords(size_t amount)
 			std::string pass;
 			for (size_t j = 0; j < m_currentPasswordLength; ++j)
 			{
-				pass += m_symbols[m_index[j]];
+				pass += m_config->GetAdmissibleSymbols()[m_index[j]];
 			}
 			bunch.emplace_back(pass);
 			if (!IndexIncrement())
@@ -134,9 +100,9 @@ std::vector<std::string> BruteforceEngine::GetBunchOfPasswords(size_t amount)
 
 bool BruteforceEngine::IndexIncrement()
 {
-	if (m_index.size() == m_maxPasswordLength)
+	if (m_index.size() == m_config->GetMaxPasswordLength())
 	{
-		int last = m_symbols.size() - 1;
+		int last = m_config->GetAdmissibleSymbols().size() - 1;
 		auto it = std::find_if(m_index.begin(), m_index.end(), [last](int index)
 			{
 				return index != last;
@@ -149,14 +115,14 @@ bool BruteforceEngine::IndexIncrement()
 	}
 	for (int i = m_index.size() - 1; i >= 0; --i)
 	{
-		if (m_index[i] < m_symbols.size() - 1)
+		if (m_index[i] < m_config->GetAdmissibleSymbols().size() - 1)
 		{
 			++m_index[i];
 			return 1;
 		}
 		m_index[i] = 0;
 	}
-	if (m_currentPasswordLength < m_maxPasswordLength)
+	if (m_currentPasswordLength < m_config->GetMaxPasswordLength())
 	{
 		++m_currentPasswordLength;
 		m_index.push_back(0);
