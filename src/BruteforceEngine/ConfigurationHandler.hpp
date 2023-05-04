@@ -10,6 +10,7 @@ struct ConfigurationContainer
 {
     std::filesystem::path plainFile{};
     std::filesystem::path encryptedFile{};
+    std::filesystem::path logFile{};
     std::string validSymbols{};
     int maxLength{};
 };
@@ -20,10 +21,13 @@ public:
     ConfigurationHandler(const std::filesystem::path& file);
     ~ConfigurationHandler() = default;
 
-    std::unique_ptr<ConfigurationContainer> load();
+    void setFile(const std::filesystem::path& file) noexcept;
+    std::filesystem::path file() const noexcept;
+
+    std::shared_ptr<ConfigurationContainer> load();
 
 private:
-    std::filesystem::path m_file;
+    std::filesystem::path m_file{};
 
 };
     

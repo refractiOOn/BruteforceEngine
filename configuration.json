@@ -1,6 +1,7 @@
 {
     "plainFile": "plain-file.txt",
     "encryptedFile": "encrypted-file.txt",
+    "logFile":"log.txt",
     "maxLength": 4,
     "validSymbols": "abcdefghijklmnopqrstuvwxyz0123456789"
 }

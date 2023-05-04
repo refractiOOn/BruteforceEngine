@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(SOURCE_FILES
     BruteforceEngine.hpp BruteforceEngine.cpp
     ConfigurationHandler.hpp ConfigurationHandler.cpp
+    FileHandler.hpp FileHandler.cpp
+    ProgressTracker.hpp ProgressTracker.cpp
 )
 
 add_library(${PROJECT_NAME} STATIC ${SOURCE_FILES})
