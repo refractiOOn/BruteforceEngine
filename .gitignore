@@ -36,3 +36,6 @@
 [Dd]ebug/
 [Rr]elease/
 CMakeUserPresets.json
+
+# Visual Studio Code
+.vscode/

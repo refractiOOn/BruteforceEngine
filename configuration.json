@@ -1,0 +1,6 @@
+{
+    "plainFile": "plain-file.txt",
+    "encryptedFile": "encrypted-file.txt",
+    "maxLength": 4,
+    "validSymbols": "abcdefghijklmnopqrstuvwxyz0123456789"
+}
