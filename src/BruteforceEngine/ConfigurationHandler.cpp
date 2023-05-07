@@ -25,7 +25,7 @@ std::shared_ptr<bruteforce::ConfigurationContainer> bruteforce::ConfigurationHan
     wil::unique_file file(fopen(m_file.string().c_str(), "r"));
     if (!file.get())
     {
-        throw std::runtime_error("File does not exist");
+        throw std::runtime_error("Configuration file does not exist");
     }
 
     // Read the file into a buffer

@@ -2,11 +2,16 @@
 #include "BruteforceEngine/ConfigurationHandler.hpp"
 #include <iostream>
 
-int main(int, char**)
+int main(int argc, char** argv)
 {
     try
     {
-        std::filesystem::path config = "C:/Users/Refraction_/Desktop/IT/Bruteforce/configuration.json";
+        if (argc < 2)
+        {
+            throw std::runtime_error("No configuration file provided");
+        }
+
+        std::filesystem::path config = argv[1];
         bruteforce::ConfigurationHandler configHandler(config);
         std::shared_ptr<bruteforce::ConfigurationContainer> configContainer = configHandler.load();
 
