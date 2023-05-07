@@ -23,7 +23,8 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> m_timeStart{};
 
     uint64_t m_endPoint{};
-    std::atomic<uint64_t> m_current{};
+    uint64_t m_current{};
+    std::atomic<uint64_t> m_updateInfo{};
 
     std::atomic_flag m_interrupted = ATOMIC_FLAG_INIT;
     std::string m_interruptMessage{};

@@ -1,18 +1,20 @@
 #include "ConfigurationHandler.hpp"
-#include <fstream>
+#include <iostream>
 #include <rapidjson/document.h>
 #include <rapidjson/filereadstream.h>
+#include <rapidjson/istreamwrapper.h>
+#include <rapidjson/error/en.h>
 #include <wil/resource.h>
 
 bruteforce::ConfigurationHandler::ConfigurationHandler(const std::filesystem::path& file) : m_file(file)
 {}
 
-void bruteforce::ConfigurationHandler::setFile(const std::filesystem::path& file)
+void bruteforce::ConfigurationHandler::setFile(const std::filesystem::path& file) noexcept
 {
     m_file = file;
 }
 
-std::filesystem::path bruteforce::ConfigurationHandler::file() const
+std::filesystem::path bruteforce::ConfigurationHandler::file() const noexcept
 {
     return m_file;
 }
@@ -21,6 +23,10 @@ std::shared_ptr<bruteforce::ConfigurationContainer> bruteforce::ConfigurationHan
 {
     // Open the file
     wil::unique_file file(fopen(m_file.string().c_str(), "r"));
+    if (!file.get())
+    {
+        throw std::runtime_error("File does not exist");
+    }
 
     // Read the file into a buffer
     constexpr int bufSize = 65536; // 64 KB
@@ -29,9 +35,10 @@ std::shared_ptr<bruteforce::ConfigurationContainer> bruteforce::ConfigurationHan
 
     // Parse the JSON document
     rapidjson::Document doc{};
-    if (doc.ParseStream(fs).HasParseError())
+    rapidjson::ParseResult res = doc.Parse(buf.c_str());
+    if (!res)
     {
-        throw std::runtime_error("JSON parse error");
+        throw std::runtime_error("JSON parse error: " + std::string(rapidjson::GetParseError_En(res.Code())));
     }
 
     // Check for required names in configuration

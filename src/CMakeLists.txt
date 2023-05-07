@@ -1,6 +1,12 @@
-set(SOURCE_FILES main.cpp)
+set(SRC_FILES main.cpp
+    BruteforceEngine/BruteforceEngine.hpp BruteforceEngine/BruteforceEngine.cpp
+    BruteforceEngine/ConfigurationHandler.hpp BruteforceEngine/ConfigurationHandler.cpp
+    BruteforceEngine/FileHandler.hpp BruteforceEngine/FileHandler.cpp
+    BruteforceEngine/Logger.hpp BruteforceEngine/Logger.cpp
+    BruteforceEngine/ProgressTracker.hpp BruteforceEngine/ProgressTracker.cpp
+    BruteforceEngine/cryptography.hpp BruteforceEngine/cryptography.cpp
+)
 
-add_subdirectory(BruteforceEngine)
+add_executable(${PROJECT_NAME} ${SRC_FILES})
 
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-target_link_libraries(${PROJECT_NAME} PUBLIC BruteforceEngine)
+#target_include_directories(${PROJECT_NAME} PUBLIC BruteforceEngine)

@@ -4,12 +4,12 @@
 bruteforce::FileHandler::FileHandler(const std::filesystem::path& file) : m_file(file)
 {}
 
-void bruteforce::FileHandler::setFile(const std::filesystem::path& file)
+void bruteforce::FileHandler::setFile(const std::filesystem::path& file) noexcept
 {
     m_file = file;
 }
 
-std::filesystem::path bruteforce::FileHandler::file() const
+std::filesystem::path bruteforce::FileHandler::file() const noexcept
 {
     return m_file;
 }
@@ -35,7 +35,7 @@ void bruteforce::FileHandler::write(const std::vector<unsigned char>& data) cons
     file.write(&data[0], data.size());
 }
 
-void bruteforce::FileHandler::write(const std::vector<unsigned char>& data) const
+void bruteforce::FileHandler::append(const std::vector<unsigned char>& data) const
 {
     std::basic_ofstream<unsigned char> file(m_file, std::ios::binary | std::ios::app);
     if (!file.is_open())

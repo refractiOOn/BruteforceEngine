@@ -1,7 +1,7 @@
 {
-    "plainFile": "plain-file.txt",
-    "encryptedFile": "encrypted-file.txt",
-    "logFile":"log.txt",
+    "plainFile": "C:/Users/Refraction_/Desktop/IT/Bruteforce/plain-file.txt",
+    "encryptedFile": "C:/Users/Refraction_/Desktop/IT/Bruteforce/encrypted-file",
+    "logFile":"C:/Users/Refraction_/Desktop/IT/Bruteforce/log.txt",
     "maxLength": 4,
     "validSymbols": "abcdefghijklmnopqrstuvwxyz0123456789"
 }

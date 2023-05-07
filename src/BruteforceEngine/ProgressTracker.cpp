@@ -7,35 +7,32 @@ bruteforce::ProgressTracker::ProgressTracker(uint64_t endpoint) :
 {}
 
 void bruteforce::ProgressTracker::run() {
-    std::cout << "Tracker started" << std::endl;
+    m_timeStart = std::chrono::high_resolution_clock::now();
 
-    while (!m_interrupted.test())
+    while (!m_interrupted.test() || m_updateInfo)
     {
-        if (m_current < m_endPoint)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-            std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - m_timeStart;
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        std::chrono::duration<double> elapsed = std::chrono::high_resolution_clock::now() - m_timeStart;
 
-            uint64_t cur = m_current; // To avoid displaying an incorrect information
-            //during the next steps because of the m_current modification
+        m_current += m_updateInfo;
+        m_updateInfo = 0;
 
-            int percent = cur * 100 / m_endPoint;
-            std::cout << "[" << percent << "%] Checked passwords: "
-                << cur << " from " << m_endPoint << std::endl;
-            std::cout << "Time elapsed: " << elapsed.count() << "s" << std::endl;
-        }
-        else
-        {
-            interrupt("The end point has been reached");
-        }
+        int percent = m_current * 100 / m_endPoint;
+        std::cout << "[" << percent << "%] Checked passwords: "
+            << m_current << " from " << m_endPoint << std::endl;
+        std::cout << "Time elapsed: " << elapsed.count() << "s" << std::endl;
     }
+    std::cout << m_interruptMessage << std::endl;
 }
 
 void bruteforce::ProgressTracker::update(uint64_t updateData) {
-    m_current += updateData;
+    m_updateInfo += updateData;
 }
 
 void bruteforce::ProgressTracker::interrupt(const std::string& message) {
-    m_interrupted.test_and_set();
-    m_interruptMessage = message;
+    if (!m_interrupted.test())
+    {
+        m_interrupted.test_and_set();
+        m_interruptMessage = message;
+    }
 }
