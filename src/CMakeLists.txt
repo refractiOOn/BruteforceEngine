@@ -7,6 +7,8 @@ set(SRC_FILES main.cpp
     BruteforceEngine/cryptography.hpp BruteforceEngine/cryptography.cpp
 )
 
-add_executable(${PROJECT_NAME} ${SRC_FILES})
+set(INCLUDE_DIRS BruteforceEngine)
 
-#target_include_directories(${PROJECT_NAME} PUBLIC BruteforceEngine)
+include_directories(${INCLUDE_DIRS})
+
+add_executable(${PROJECT_NAME} ${SRC_FILES})

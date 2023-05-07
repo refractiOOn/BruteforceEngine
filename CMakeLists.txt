@@ -32,10 +32,3 @@ target_link_libraries(${PROJECT_NAME} PUBLIC
     ${RapidJSON_LIBRARIES}
     ${wil_LIBRARIES}
 )
-
-include(CTest)
-enable_testing()
-
-set(CPACK_PROJECT_NAME ${PROJECT_NAME})
-set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
-include(CPack)
